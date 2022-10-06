@@ -5,44 +5,42 @@
 #ifndef CPPCOROUTINES_04_TASK_TASKAWAITER_H_
 #define CPPCOROUTINES_04_TASK_TASKAWAITER_H_
 
-#include "coroutine_common.h"
 #include "Executor.h"
+#include "coroutine_common.h"
 
-template<typename ResultType, typename Executor>
-struct Task;
+template <typename ResultType, typename Executor> struct Task;
 
-template<typename Result, typename Executor>
-struct TaskAwaiter {
-  explicit TaskAwaiter(AbstractExecutor *executor, Task<Result, Executor> &&task) noexcept
-      : _executor(executor), task(std::move(task)) {}
+template <typename Result, typename Executor> struct TaskAwaiter {
+    explicit TaskAwaiter(AbstractExecutor* executor, Task<Result, Executor>&& task) noexcept
+        : _executor(executor)
+        , task(std::move(task)) {
+    }
 
-  TaskAwaiter(TaskAwaiter &&completion) noexcept
-      : _executor(completion._executor), task(std::exchange(completion.task, {})) {}
+    TaskAwaiter(TaskAwaiter&& completion) noexcept
+        : _executor(completion._executor)
+        , task(std::exchange(completion.task, {})) {
+    }
 
-  TaskAwaiter(TaskAwaiter &) = delete;
+    TaskAwaiter(TaskAwaiter&) = delete;
 
-  TaskAwaiter &operator=(TaskAwaiter &) = delete;
+    TaskAwaiter& operator=(TaskAwaiter&) = delete;
 
-  constexpr bool await_ready() const noexcept {
-    return false;
-  }
+    constexpr bool await_ready() const noexcept {
+        return false;
+    }
 
-  void await_suspend(std::coroutine_handle<> handle) noexcept {
-    task.finally([handle, this]() {
-      _executor->execute([handle]() {
-        handle.resume();
-      });
-    });
-  }
+    void await_suspend(std::coroutine_handle<> handle) noexcept {
+        task.finally(
+            [ handle, this ]() { _executor->execute([ handle ]() mutable { handle.resume(); }); });
+    }
 
-  Result await_resume() noexcept {
-    return task.get_result();
-  }
+    Result await_resume() noexcept {
+        return task.get_result();
+    }
 
- private:
-  Task<Result, Executor> task;
-  AbstractExecutor *_executor;
-
+private:
+    Task<Result, Executor> task;
+    AbstractExecutor* _executor;
 };
 
-#endif //CPPCOROUTINES_04_TASK_TASKAWAITER_H_
+#endif // CPPCOROUTINES_04_TASK_TASKAWAITER_H_

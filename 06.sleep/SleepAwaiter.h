@@ -11,26 +11,29 @@
 
 struct SleepAwaiter {
 
-  explicit SleepAwaiter(AbstractExecutor *executor, long long duration) noexcept
-      : _executor(executor), _duration(duration) {}
+    explicit SleepAwaiter(AbstractExecutor* executor, long long duration) noexcept
+        : _executor(executor)
+        , _duration(duration) {
+    }
 
-  bool await_ready() const { return false; }
+    bool await_ready() const {
+        return false;
+    }
 
-  void await_suspend(std::coroutine_handle<> handle) const {
-    static Scheduler scheduler;
+    void await_suspend(std::coroutine_handle<> handle) const {
+        static Scheduler scheduler;
 
-    scheduler.execute([this, handle]() {
-      _executor->execute([handle]() {
-        handle.resume();
-      });
-    }, _duration);
-  }
+        scheduler.execute(
+            [ this, handle ]() { _executor->execute([ handle ]() mutable { handle.resume(); }); },
+            _duration);
+    }
 
-  void await_resume() {}
+    void await_resume() {
+    }
 
- private:
-  AbstractExecutor *_executor;
-  long long _duration;
+private:
+    AbstractExecutor* _executor;
+    long long _duration;
 };
 
-#endif //CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_
+#endif // CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_

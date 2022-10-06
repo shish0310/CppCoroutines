@@ -5,27 +5,29 @@
 #ifndef CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_
 #define CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_
 
+#include "CommonAwaiter.h"
 #include "Executor.h"
 #include "Scheduler.h"
 #include "coroutine_common.h"
-#include "CommonAwaiter.h"
 
 struct SleepAwaiter : Awaiter<void> {
 
-  explicit SleepAwaiter(long long duration) noexcept
-      : _duration(duration) {}
+    explicit SleepAwaiter(long long duration) noexcept
+        : _duration(duration) {
+    }
 
-  template<typename _Rep, typename _Period>
-  explicit SleepAwaiter(std::chrono::duration<_Rep, _Period> &&duration) noexcept
-      : _duration(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {}
+    template <typename _Rep, typename _Period>
+    explicit SleepAwaiter(std::chrono::duration<_Rep, _Period>&& duration) noexcept
+        : _duration(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count()) {
+    }
 
-  void after_suspend() override {
-    static Scheduler scheduler;
-    scheduler.execute([this] { resume(); }, _duration);
-  }
+    void after_suspend() override {
+        static Scheduler scheduler;
+        scheduler.execute([ this ] { resume(); }, _duration);
+    }
 
- private:
-  long long _duration;
+private:
+    long long _duration;
 };
 
-#endif //CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_
+#endif // CPPCOROUTINES_TASKS_06_SLEEP_SLEEPAWAITER_H_

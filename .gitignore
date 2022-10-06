@@ -1,3 +1,6 @@
 cmake-build*
 *.iml
 .idea
+.vscode
+.cache
+build
